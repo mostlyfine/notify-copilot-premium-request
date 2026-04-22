@@ -19,68 +19,25 @@ describe("calcDaysRemaining", () => {
     vi.useRealTimers();
   });
 
-  it("リセット日が未来のとき daysRemaining が正の値になる", () => {
+  it("リセット日が未来のとき正の値になる", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-04-22T09:00:00Z"));
 
-    const { daysRemaining } = calcDaysRemaining("2026-05-01T00:00:00Z");
-    expect(daysRemaining).toBe(8);
+    expect(calcDaysRemaining("2026-05-01T00:00:00Z")).toBe(8);
   });
 
-  it("リセット日が過去のとき daysRemaining が 0 になる（負にならない）", () => {
+  it("リセット日が過去のとき 0 になる（負にならない）", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-05-10T09:00:00Z"));
 
-    const { daysRemaining } = calcDaysRemaining("2026-05-01T00:00:00Z");
-    expect(daysRemaining).toBe(0);
+    expect(calcDaysRemaining("2026-05-01T00:00:00Z")).toBe(0);
   });
 
-  it("リセット日と現在が同日のとき daysRemaining が 0 になる", () => {
+  it("リセット日と現在が同日のとき 0 になる", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-05-01T12:00:00Z"));
 
-    const { daysRemaining } = calcDaysRemaining("2026-05-01T00:00:00Z");
-    expect(daysRemaining).toBe(0);
-  });
-
-  it("4月（30日）の daysTotal が 30 になる", () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-04-15T00:00:00Z"));
-
-    const { daysTotal } = calcDaysRemaining("2026-05-01T00:00:00Z");
-    expect(daysTotal).toBe(30);
-  });
-
-  it("1月（31日）の daysTotal が 31 になる", () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-01-15T00:00:00Z"));
-
-    const { daysTotal } = calcDaysRemaining("2026-02-01T00:00:00Z");
-    expect(daysTotal).toBe(31);
-  });
-
-  it("うるう年でない年の2月の daysTotal が 28 になる", () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-02-10T00:00:00Z")); // 2026は非うるう年
-
-    const { daysTotal } = calcDaysRemaining("2026-03-01T00:00:00Z");
-    expect(daysTotal).toBe(28);
-  });
-
-  it("うるう年の2月の daysTotal が 29 になる", () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2024-02-10T00:00:00Z")); // 2024はうるう年
-
-    const { daysTotal } = calcDaysRemaining("2024-03-01T00:00:00Z");
-    expect(daysTotal).toBe(29);
-  });
-
-  it("12月の daysTotal が 31 になる（年をまたぐ計算）", () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-12-15T00:00:00Z"));
-
-    const { daysTotal } = calcDaysRemaining("2027-01-01T00:00:00Z");
-    expect(daysTotal).toBe(31);
+    expect(calcDaysRemaining("2026-05-01T00:00:00Z")).toBe(0);
   });
 });
 
@@ -108,7 +65,6 @@ describe("printQuotaToConsole", () => {
     unlimited: false,
     resetDate: "2026-05-01T00:00:00Z",
     daysRemaining: 9,
-    daysTotal: 30,
   };
 
   it("unlimited: false のとき残量・総量・パーセントが出力される", () => {
@@ -138,11 +94,16 @@ describe("printQuotaToConsole", () => {
     expect(output).not.toContain("T00:00:00Z");
   });
 
-  it("残り日数と総日数が出力される", () => {
+  it("残り日数が出力される", () => {
     printQuotaToConsole(baseParams);
     const output = consoleLogs.join("\n");
-    expect(output).toContain("9");
-    expect(output).toContain("30");
+    expect(output).toContain("9 日");
+  });
+
+  it("総日数は出力されない", () => {
+    printQuotaToConsole(baseParams);
+    const output = consoleLogs.join("\n");
+    expect(output).not.toMatch(/9 日 \//);
   });
 });
 

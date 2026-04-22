@@ -9,7 +9,6 @@ const baseParams: QuotaParams = {
   unlimited: false,
   resetDate: "2026-05-01T00:00:00Z",
   daysRemaining: 9,
-  daysTotal: 30,
 };
 
 describe("buildSlackPayload", () => {
@@ -43,10 +42,11 @@ describe("buildSlackPayload", () => {
       expect(text).toContain("2026-05-01");
     });
 
-    it("残り日数・総日数が含まれる", () => {
+    it("残り日数が含まれる", () => {
       const payload = buildSlackPayload(baseParams);
       const text = payload.blocks[2].text?.text ?? "";
-      expect(text).toContain("9 日 / 30 日");
+      expect(text).toContain("9 日");
+      expect(text).not.toContain("9 日 /");
     });
   });
 

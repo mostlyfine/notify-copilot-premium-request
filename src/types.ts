@@ -5,5 +5,4 @@ export interface QuotaParams {
   unlimited: boolean;
   resetDate: string;
   daysRemaining: number;
-  daysTotal: number;
 }

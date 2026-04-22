@@ -46,7 +46,6 @@ export function buildSlackPayload(params: QuotaParams): SlackPayload {
     unlimited,
     resetDate,
     daysRemaining,
-    daysTotal,
   } = params;
 
   const usageText = unlimited
@@ -70,8 +69,7 @@ export function buildSlackPayload(params: QuotaParams): SlackPayload {
       text: {
         type: "mrkdwn",
         text: [
-          `📊 *Premium Interactions*`,
-          `　${usageText}`,
+          `📊 ${usageText}`,
           usageBar ? `　${usageBar}` : "",
         ]
           .filter(Boolean)
@@ -84,7 +82,7 @@ export function buildSlackPayload(params: QuotaParams): SlackPayload {
         type: "mrkdwn",
         text: [
           `🗓️ リセット日: *${resetDateFormatted}*`,
-          `📅 残り日数: *${daysRemaining} 日 / ${daysTotal} 日*`,
+          `📅 残り日数: *${daysRemaining} 日*`,
         ].join("\n"),
       },
     },
