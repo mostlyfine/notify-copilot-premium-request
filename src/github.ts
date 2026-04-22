@@ -1,4 +1,7 @@
-import { execSync } from "child_process";
+import { exec } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
 
 export interface QuotaEntry {
   entitlement: number;
@@ -23,9 +26,7 @@ export interface CopilotUserResponse {
  * 現在の Copilot クォータ情報を取得する。
  * gh の組み込み認証を使用するため、追加の認証設定が不要。
  */
-export function fetchCopilotQuota(): CopilotUserResponse {
-  const output = execSync("gh api /copilot_internal/user", {
-    encoding: "utf-8",
-  });
-  return JSON.parse(output) as CopilotUserResponse;
+export async function fetchCopilotQuota(): Promise<CopilotUserResponse> {
+  const { stdout } = await execAsync("gh api /copilot_internal/user");
+  return JSON.parse(stdout) as CopilotUserResponse;
 }

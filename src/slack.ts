@@ -1,3 +1,5 @@
+import type { QuotaParams } from "./types";
+
 export interface SlackBlock {
   type: string;
   text?: {
@@ -9,6 +11,8 @@ export interface SlackBlock {
 export interface SlackPayload {
   blocks: SlackBlock[];
 }
+
+const PROGRESS_BAR_WIDTH = 20;
 
 /**
  * Slack Incoming Webhook へ通知を送信する。
@@ -34,15 +38,7 @@ export async function sendSlackNotification(
 /**
  * プレミアムリクエスト使用状況の Slack メッセージを構築する。
  */
-export function buildSlackPayload(params: {
-  remaining: number;
-  entitlement: number;
-  percentRemaining: number;
-  unlimited: boolean;
-  resetDate: string;
-  daysRemaining: number;
-  daysTotal: number;
-}): SlackPayload {
+export function buildSlackPayload(params: QuotaParams): SlackPayload {
   const {
     remaining,
     entitlement,
@@ -101,9 +97,11 @@ export function buildSlackPayload(params: {
  * 使用率に応じたテキストプログレスバーを生成する（0-100%）。
  */
 function buildUsageBar(percentUsed: number): string {
-  const total = 20;
-  const filled = Math.round((percentUsed / 100) * total);
-  const empty = total - filled;
+  const filled = Math.min(
+    PROGRESS_BAR_WIDTH,
+    Math.max(0, Math.round((percentUsed / 100) * PROGRESS_BAR_WIDTH))
+  );
+  const empty = PROGRESS_BAR_WIDTH - filled;
   const bar = "█".repeat(filled) + "░".repeat(empty);
   return `\`[${bar}] ${percentUsed.toFixed(1)}% 使用済み\``;
 }

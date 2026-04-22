@@ -1,5 +1,6 @@
 import { fetchCopilotQuota } from "./github";
 import { buildSlackPayload, sendSlackNotification } from "./slack";
+import type { QuotaParams } from "./types";
 
 function calcDaysRemaining(resetDateUtc: string): {
   daysRemaining: number;
@@ -12,24 +13,12 @@ function calcDaysRemaining(resetDateUtc: string): {
 
   const year = now.getUTCFullYear();
   const month = now.getUTCMonth() + 1;
-  const nextMonthStart = new Date(Date.UTC(month === 12 ? year + 1 : year, month === 12 ? 0 : month, 1));
-  const thisMonthStart = new Date(Date.UTC(year, month - 1, 1));
-  const daysTotal = Math.round(
-    (nextMonthStart.getTime() - thisMonthStart.getTime()) / (1000 * 60 * 60 * 24)
-  );
+  const daysTotal = new Date(Date.UTC(year, month, 0)).getUTCDate();
 
   return { daysRemaining, daysTotal };
 }
 
-function printQuotaToConsole(params: {
-  remaining: number;
-  entitlement: number;
-  percentRemaining: number;
-  unlimited: boolean;
-  resetDate: string;
-  daysRemaining: number;
-  daysTotal: number;
-}): void {
+function printQuotaToConsole(params: QuotaParams): void {
   const { remaining, entitlement, percentRemaining, unlimited, resetDate, daysRemaining, daysTotal } = params;
   const resetDateFormatted = resetDate.split("T")[0];
   const usageLine = unlimited
@@ -49,7 +38,7 @@ async function main(): Promise<void> {
   const webhookUrl = process.env.SLACK_WEBHOOK_URL;
 
   console.log("Fetching Copilot quota...");
-  const response = fetchCopilotQuota();
+  const response = await fetchCopilotQuota();
 
   const premium = response.quota_snapshots.premium_interactions;
   const { daysRemaining, daysTotal } = calcDaysRemaining(
