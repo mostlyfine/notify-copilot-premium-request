@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
-import { calcDaysRemaining, printQuotaToConsole, main } from "../src/index";
+import { calcDaysRemaining, buildQuotaParams, printQuotaToConsole, main } from "../src/index";
 import type { QuotaParams } from "../src/types";
+import type { CopilotUserResponse } from "../src/github";
 
 vi.mock("../src/github");
 vi.mock("../src/slack");
@@ -38,6 +39,64 @@ describe("calcDaysRemaining", () => {
     vi.setSystemTime(new Date("2026-05-01T12:00:00Z"));
 
     expect(calcDaysRemaining("2026-05-01T00:00:00Z")).toBe(0);
+  });
+});
+
+// --- buildQuotaParams ---
+
+describe("buildQuotaParams", () => {
+  const mockResponse: CopilotUserResponse = {
+    quota_snapshots: {
+      chat: { entitlement: 100, remaining: 80, unlimited: false, percent_remaining: 80 },
+      completions: { entitlement: 200, remaining: 150, unlimited: false, percent_remaining: 75 },
+      premium_interactions: {
+        entitlement: 300,
+        remaining: 200,
+        unlimited: false,
+        percent_remaining: 66.7,
+      },
+    },
+    quota_reset_date_utc: "2026-05-01T00:00:00Z",
+  };
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("premium_interactions のフィールドが QuotaParams にマッピングされる", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-22T09:00:00Z"));
+
+    const params = buildQuotaParams(mockResponse);
+
+    expect(params.remaining).toBe(200);
+    expect(params.entitlement).toBe(300);
+    expect(params.percentRemaining).toBe(66.7);
+    expect(params.unlimited).toBe(false);
+    expect(params.resetDate).toBe("2026-05-01T00:00:00Z");
+  });
+
+  it("daysRemaining が quota_reset_date_utc から計算される", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-22T09:00:00Z"));
+
+    const params = buildQuotaParams(mockResponse);
+
+    expect(params.daysRemaining).toBe(8);
+  });
+
+  it("unlimited: true の場合も正しくマッピングされる", () => {
+    const unlimitedResponse: CopilotUserResponse = {
+      ...mockResponse,
+      quota_snapshots: {
+        ...mockResponse.quota_snapshots,
+        premium_interactions: { entitlement: 0, remaining: 0, unlimited: true, percent_remaining: 100 },
+      },
+    };
+
+    const params = buildQuotaParams(unlimitedResponse);
+
+    expect(params.unlimited).toBe(true);
   });
 });
 

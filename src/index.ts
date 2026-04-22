@@ -1,4 +1,5 @@
 import { fetchCopilotQuota } from "./github";
+import type { CopilotUserResponse } from "./github";
 import { buildSlackPayload, sendSlackNotification } from "./slack";
 import type { QuotaParams } from "./types";
 
@@ -7,6 +8,18 @@ export function calcDaysRemaining(resetDateUtc: string): number {
   const resetDate = new Date(resetDateUtc);
   const diffMs = resetDate.getTime() - now.getTime();
   return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+}
+
+export function buildQuotaParams(response: CopilotUserResponse): QuotaParams {
+  const premium = response.quota_snapshots.premium_interactions;
+  return {
+    remaining: premium.remaining,
+    entitlement: premium.entitlement,
+    percentRemaining: premium.percent_remaining,
+    unlimited: premium.unlimited,
+    resetDate: response.quota_reset_date_utc,
+    daysRemaining: calcDaysRemaining(response.quota_reset_date_utc),
+  };
 }
 
 export function printQuotaToConsole(params: QuotaParams): void {
@@ -29,19 +42,7 @@ export async function main(): Promise<void> {
   const webhookUrl = process.env.SLACK_WEBHOOK_URL;
 
   console.log("Fetching Copilot quota...");
-  const response = await fetchCopilotQuota();
-
-  const premium = response.quota_snapshots.premium_interactions;
-  const daysRemaining = calcDaysRemaining(response.quota_reset_date_utc);
-
-  const quotaParams = {
-    remaining: premium.remaining,
-    entitlement: premium.entitlement,
-    percentRemaining: premium.percent_remaining,
-    unlimited: premium.unlimited,
-    resetDate: response.quota_reset_date_utc,
-    daysRemaining,
-  };
+  const quotaParams = buildQuotaParams(await fetchCopilotQuota());
 
   if (!webhookUrl) {
     console.warn("[WARN] SLACK_WEBHOOK_URL is not set. Printing quota to console instead.");
