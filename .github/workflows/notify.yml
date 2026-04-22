@@ -1,0 +1,29 @@
+name: Copilot Premium Request Monitor
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 毎日 0:00 UTC = 9:00 AM JST
+  workflow_dispatch:       # 手動実行も可能
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run notification script
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: npm start

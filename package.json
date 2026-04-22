@@ -1,0 +1,20 @@
+{
+  "name": "copilot-premiumrequest-monitor",
+  "version": "1.0.0",
+  "description": "Monitor GitHub Copilot premium request usage and notify Slack",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
