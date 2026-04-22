@@ -2,7 +2,7 @@ import { fetchCopilotQuota } from "./github";
 import { buildSlackPayload, sendSlackNotification } from "./slack";
 import type { QuotaParams } from "./types";
 
-function calcDaysRemaining(resetDateUtc: string): {
+export function calcDaysRemaining(resetDateUtc: string): {
   daysRemaining: number;
   daysTotal: number;
 } {
@@ -18,7 +18,7 @@ function calcDaysRemaining(resetDateUtc: string): {
   return { daysRemaining, daysTotal };
 }
 
-function printQuotaToConsole(params: QuotaParams): void {
+export function printQuotaToConsole(params: QuotaParams): void {
   const { remaining, entitlement, percentRemaining, unlimited, resetDate, daysRemaining, daysTotal } = params;
   const resetDateFormatted = resetDate.split("T")[0];
   const usageLine = unlimited
@@ -34,7 +34,7 @@ function printQuotaToConsole(params: QuotaParams): void {
   console.log("");
 }
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   const webhookUrl = process.env.SLACK_WEBHOOK_URL;
 
   console.log("Fetching Copilot quota...");
@@ -68,7 +68,9 @@ async function main(): Promise<void> {
   console.log("Done.");
 }
 
-main().catch((err) => {
-  console.error("Error:", err instanceof Error ? err.message : err);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err) => {
+    console.error("Error:", err instanceof Error ? err.message : err);
+    process.exit(1);
+  });
+}
